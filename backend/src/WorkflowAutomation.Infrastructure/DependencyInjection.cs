@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WorkflowAutomation.Application.Authentication.Services;
+using WorkflowAutomation.Domain.Interfaces;
 using WorkflowAutomation.Infrastructure.Authentication;
 using WorkflowAutomation.Infrastructure.Configuration;
 using WorkflowAutomation.Infrastructure.Persistence;
+using WorkflowAutomation.Infrastructure.Persistence.Repositories;
 
 namespace WorkflowAutomation.Infrastructure;
 
@@ -27,7 +29,13 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-        // Register repositories, services, and executors will be added here later
+        // Register repositories
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IWorkflowRepository, WorkflowRepository>();
+        services.AddScoped<IWorkflowExecutionRepository, WorkflowExecutionRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Register workflow executors will be added here later
 
         return services;
     }
