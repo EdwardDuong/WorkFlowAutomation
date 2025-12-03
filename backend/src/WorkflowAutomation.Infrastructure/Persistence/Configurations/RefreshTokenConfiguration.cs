@@ -36,11 +36,6 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(r => r.RevokedAt)
             .HasColumnName("revoked_at");
 
-        builder.Property(r => r.IsRevoked)
-            .HasColumnName("is_revoked")
-            .HasDefaultValue(false)
-            .IsRequired();
-
         // Indexes
         builder.HasIndex(r => r.Token)
             .IsUnique()
@@ -49,7 +44,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.HasIndex(r => r.UserId)
             .HasDatabaseName("idx_refresh_tokens_user_id");
 
-        builder.HasIndex(r => new { r.ExpiresAt, r.IsRevoked })
+        builder.HasIndex(r => new { r.ExpiresAt, r.RevokedAt })
             .HasDatabaseName("idx_refresh_tokens_expiry");
 
         // Relationships

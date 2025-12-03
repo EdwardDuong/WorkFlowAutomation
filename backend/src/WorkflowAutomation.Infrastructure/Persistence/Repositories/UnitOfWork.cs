@@ -25,8 +25,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<T> Repository<T>() where T : class
     {
-        return new GenericRepository<T>(_context) as IRepository<T>
-            ?? throw new InvalidOperationException($"Repository for type {typeof(T)} could not be created");
+        // Note: GenericRepository requires BaseEntity, but the interface only requires class
+        // This will fail at runtime if T is not a BaseEntity
+        throw new NotImplementedException("Generic repository access not yet implemented. Use specific repository properties instead.");
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
