@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\WorkflowAutomation.Domain\WorkflowAutomation.Domain.csproj" />
+    <ProjectReference Include="..\WorkflowAutomation.Application\WorkflowAutomation.Application.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
