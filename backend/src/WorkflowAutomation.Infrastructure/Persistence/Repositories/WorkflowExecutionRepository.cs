@@ -20,28 +20,24 @@ public class WorkflowExecutionRepository : GenericRepository<WorkflowExecution>,
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
-    public async Task<List<WorkflowExecution>> GetByWorkflowIdAsync(Guid workflowId, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<WorkflowExecution>> GetByWorkflowIdAsync(Guid workflowId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(e => e.WorkflowId == workflowId)
             .OrderByDescending(e => e.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<WorkflowExecution>> GetByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<WorkflowExecution>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(e => e.UserId == userId)
             .Include(e => e.Workflow)
             .OrderByDescending(e => e.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<WorkflowExecution>> GetByStatusAsync(ExecutionStatus status, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<WorkflowExecution>> GetByStatusAsync(ExecutionStatus status, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(e => e.Status == status)
@@ -50,26 +46,12 @@ public class WorkflowExecutionRepository : GenericRepository<WorkflowExecution>,
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountByWorkflowIdAsync(Guid workflowId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<WorkflowExecution>> GetRecentExecutionsAsync(int count, CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .Where(e => e.WorkflowId == workflowId)
-            .CountAsync(cancellationToken);
-    }
-
-    public async Task<int> CountByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet
-            .Where(e => e.UserId == userId)
-            .CountAsync(cancellationToken);
-    }
-
-    public async Task<Dictionary<ExecutionStatus, int>> GetStatusCountsByWorkflowIdAsync(Guid workflowId, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet
-            .Where(e => e.WorkflowId == workflowId)
-            .GroupBy(e => e.Status)
-            .Select(g => new { Status = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Status, x => x.Count, cancellationToken);
+            .Include(e => e.Workflow)
+            .OrderByDescending(e => e.CreatedAt)
+            .Take(count)
+            .ToListAsync(cancellationToken);
     }
 }
