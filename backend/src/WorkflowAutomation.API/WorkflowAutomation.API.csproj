@@ -10,4 +10,9 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\WorkflowAutomation.Application\WorkflowAutomation.Application.csproj" />
+    <ProjectReference Include="..\WorkflowAutomation.Infrastructure\WorkflowAutomation.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
