@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: workflow-postgres
+    environment:
+      POSTGRES_DB: workflowautomation
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - workflow-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: workflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - workflow-network
+    command: redis-server --appendonly yes
+
+  # Backend API (uncomment after creating Dockerfile)
+  # api:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: workflow-api
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=workflowautomation;Username=postgres;Password=postgres
+  #     - ConnectionStrings__Redis=redis:6379
+  #   ports:
+  #     - "7001:80"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #   networks:
+  #     - workflow-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  workflow-network:
+    driver: bridge
