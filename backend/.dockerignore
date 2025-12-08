@@ -1,0 +1,48 @@
+# Ignore build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Ignore IDE and editor files
+**/.vs/
+**/.vscode/
+**/.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Ignore logs
+**/logs/
+*.log
+
+# Ignore NuGet packages
+**/packages/
+*.nupkg
+
+# Ignore test results
+**/TestResults/
+**/*.trx
+
+# Ignore Git files
+.git/
+.gitignore
+.gitattributes
+
+# Ignore Docker files
+**/Dockerfile*
+**/docker-compose*
+.dockerignore
+
+# Ignore documentation
+**/*.md
+LICENSE
+
+# Ignore OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Ignore environment files
+**/.env
+**/.env.*

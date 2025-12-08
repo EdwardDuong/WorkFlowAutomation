@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: workflowautomation-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: workflowautomation
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - workflowautomation-network
+
+  # .NET API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: workflowautomation-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=workflowautomation;Username=postgres;Password=postgres
+      - JwtSettings__Secret=workflow-automation-production-jwt-secret-key-minimum-32-characters-required-for-hs256
+      - JwtSettings__Issuer=WorkflowAutomation.API
+      - JwtSettings__Audience=WorkflowAutomation.Client
+      - JwtSettings__AccessTokenExpirationMinutes=15
+      - JwtSettings__RefreshTokenExpirationDays=7
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/WorkflowAutomation.API/logs:/app/logs
+    networks:
+      - workflowautomation-network
+    restart: unless-stopped
+
+networks:
+  workflowautomation-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
