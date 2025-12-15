@@ -11,12 +11,12 @@ public class WorkflowExecution : BaseEntity
     public DateTime? StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public string? ErrorMessage { get; set; }
-    public string ExecutionContext { get; set; } = "{}"; // JSON string for initial input data
+    public string ExecutionContextJson { get; set; } = "{}"; // JSON string for initial input data
 
     // Navigation properties
     public virtual Workflow Workflow { get; set; } = null!;
     public virtual User? User { get; set; }
-    public virtual ICollection<ExecutionLog> ExecutionLogs { get; set; } = new List<ExecutionLog>();
+    public virtual ICollection<ExecutionLog> Logs { get; set; } = new List<ExecutionLog>();
 
     public WorkflowExecution() : base() { }
 
@@ -24,7 +24,7 @@ public class WorkflowExecution : BaseEntity
     {
         WorkflowId = workflowId;
         UserId = userId;
-        ExecutionContext = executionContext;
+        ExecutionContextJson = executionContext;
         Status = ExecutionStatus.Pending;
     }
 

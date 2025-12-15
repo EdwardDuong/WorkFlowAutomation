@@ -8,6 +8,7 @@ public class RefreshToken : BaseEntity
     public string Token { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
     public DateTime? RevokedAt { get; set; }
+    public bool IsRevoked { get; set; } = false;
 
     // Navigation properties
     public virtual User User { get; set; } = null!;
@@ -22,11 +23,11 @@ public class RefreshToken : BaseEntity
     }
 
     public bool IsExpired() => DateTime.UtcNow >= ExpiresAt;
-    public bool IsRevoked() => RevokedAt.HasValue;
-    public bool IsActive() => !IsExpired() && !IsRevoked();
+    public bool IsActive() => !IsExpired() && !IsRevoked;
 
     public void Revoke()
     {
+        IsRevoked = true;
         RevokedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }

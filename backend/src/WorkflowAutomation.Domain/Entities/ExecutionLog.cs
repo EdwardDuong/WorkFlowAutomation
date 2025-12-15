@@ -11,8 +11,8 @@ public class ExecutionLog : BaseEntity
     public ExecutionStatus Status { get; set; }
     public DateTime? StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
-    public string? InputData { get; set; } // JSON string
-    public string? OutputData { get; set; } // JSON string
+    public string? InputDataJson { get; set; } // JSON string
+    public string? OutputDataJson { get; set; } // JSON string
     public string? ErrorMessage { get; set; }
 
     // Navigation properties
@@ -32,7 +32,7 @@ public class ExecutionLog : BaseEntity
     {
         Status = ExecutionStatus.Running;
         StartedAt = DateTime.UtcNow;
-        InputData = inputData;
+        InputDataJson = inputData;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -40,7 +40,7 @@ public class ExecutionLog : BaseEntity
     {
         Status = ExecutionStatus.Completed;
         CompletedAt = DateTime.UtcNow;
-        OutputData = outputData;
+        OutputDataJson = outputData;
         UpdatedAt = DateTime.UtcNow;
     }
 

@@ -9,9 +9,10 @@ public class WorkflowNode : BaseEntity
     public Guid WorkflowId { get; set; }
     public NodeType NodeType { get; set; }
     public string NodeId { get; set; } = string.Empty; // React Flow node ID
+    public string? Label { get; set; }
     public float? PositionX { get; set; }
     public float? PositionY { get; set; }
-    public string Configuration { get; set; } = "{}"; // JSON string
+    public string ConfigurationJson { get; set; } = "{}"; // JSON string
 
     // Navigation properties
     public virtual Workflow Workflow { get; set; } = null!;
@@ -25,14 +26,14 @@ public class WorkflowNode : BaseEntity
         NodeId = nodeId;
         PositionX = positionX;
         PositionY = positionY;
-        Configuration = configuration;
+        ConfigurationJson = configuration;
     }
 
     public T? GetConfiguration<T>() where T : class
     {
         try
         {
-            return JsonSerializer.Deserialize<T>(Configuration);
+            return JsonSerializer.Deserialize<T>(ConfigurationJson);
         }
         catch
         {
@@ -42,7 +43,7 @@ public class WorkflowNode : BaseEntity
 
     public void SetConfiguration<T>(T config) where T : class
     {
-        Configuration = JsonSerializer.Serialize(config);
+        ConfigurationJson = JsonSerializer.Serialize(config);
         UpdatedAt = DateTime.UtcNow;
     }
 }
