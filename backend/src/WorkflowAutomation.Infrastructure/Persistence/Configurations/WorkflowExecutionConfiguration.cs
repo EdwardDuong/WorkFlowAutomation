@@ -40,12 +40,16 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .HasColumnName("error_message")
             .HasMaxLength(2000);
 
-        builder.Property(e => e.ExecutionContextJson)
+        builder.Property(e => e.ExecutionContext)
             .HasColumnName("execution_context")
             .HasColumnType("jsonb");
 
         builder.Property(e => e.CreatedAt)
             .HasColumnName("created_at")
+            .IsRequired();
+
+        builder.Property(e => e.UpdatedAt)
+            .HasColumnName("updated_at")
             .IsRequired();
 
         // Indexes
@@ -68,11 +72,11 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.User)
-            .WithMany()
+            .WithMany(u => u.WorkflowExecutions)
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(e => e.Logs)
+        builder.HasMany(e => e.ExecutionLogs)
             .WithOne(l => l.Execution)
             .HasForeignKey(l => l.ExecutionId)
             .OnDelete(DeleteBehavior.Cascade);

@@ -51,6 +51,10 @@ public class WorkflowEdgeConfiguration : IEntityTypeConfiguration<WorkflowEdge>
             .HasColumnName("created_at")
             .IsRequired();
 
+        builder.Property(e => e.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
+
         // Indexes
         builder.HasIndex(e => e.WorkflowId)
             .HasDatabaseName("idx_workflow_edges_workflow_id");
