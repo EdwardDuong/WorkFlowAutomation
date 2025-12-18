@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using WorkflowAutomation.Application.Authentication.Services;
 
 namespace WorkflowAutomation.Application;
 
@@ -20,6 +21,10 @@ public static class DependencyInjection
         {
             // AutoMapper profiles will be added here later
         }, Assembly.GetExecutingAssembly());
+
+        // Register Authentication Services
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         return services;
     }
