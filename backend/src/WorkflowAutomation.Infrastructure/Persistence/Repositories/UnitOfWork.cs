@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
     private IUserRepository? _userRepository;
     private IWorkflowRepository? _workflowRepository;
     private IWorkflowExecutionRepository? _workflowExecutionRepository;
+    private IRefreshTokenRepository? _refreshTokenRepository;
     private IDbContextTransaction? _transaction;
 
     public UnitOfWork(ApplicationDbContext context)
@@ -23,6 +24,8 @@ public class UnitOfWork : IUnitOfWork
     public IWorkflowRepository Workflows => _workflowRepository ??= new WorkflowRepository(_context);
 
     public IWorkflowExecutionRepository WorkflowExecutions => _workflowExecutionRepository ??= new WorkflowExecutionRepository(_context);
+
+    public IRefreshTokenRepository RefreshTokens => _refreshTokenRepository ??= new RefreshTokenRepository(_context);
 
     public IRepository<T> Repository<T>() where T : BaseEntity
     {

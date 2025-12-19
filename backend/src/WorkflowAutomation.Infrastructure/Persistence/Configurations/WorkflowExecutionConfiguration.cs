@@ -22,7 +22,7 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
 
         builder.Property(e => e.UserId)
             .HasColumnName("user_id")
-            .IsRequired();
+            .IsRequired(false);
 
         builder.Property(e => e.Status)
             .HasColumnName("status")
@@ -40,7 +40,7 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .HasColumnName("error_message")
             .HasMaxLength(2000);
 
-        builder.Property(e => e.ExecutionContext)
+        builder.Property(e => e.ExecutionContextJson)
             .HasColumnName("execution_context")
             .HasColumnType("jsonb");
 
@@ -76,7 +76,7 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(e => e.ExecutionLogs)
+        builder.HasMany(e => e.Logs)
             .WithOne(l => l.Execution)
             .HasForeignKey(l => l.ExecutionId)
             .OnDelete(DeleteBehavior.Cascade);

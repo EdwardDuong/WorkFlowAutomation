@@ -40,6 +40,11 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(r => r.RevokedAt)
             .HasColumnName("revoked_at");
 
+        builder.Property(r => r.IsRevoked)
+            .HasColumnName("is_revoked")
+            .HasDefaultValue(false)
+            .IsRequired();
+
         // Indexes
         builder.HasIndex(r => r.Token)
             .IsUnique()

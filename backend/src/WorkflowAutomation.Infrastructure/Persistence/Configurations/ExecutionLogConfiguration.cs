@@ -43,11 +43,11 @@ public class ExecutionLogConfiguration : IEntityTypeConfiguration<ExecutionLog>
         builder.Property(l => l.CompletedAt)
             .HasColumnName("completed_at");
 
-        builder.Property(l => l.InputData)
+        builder.Property(l => l.InputDataJson)
             .HasColumnName("input_data")
             .HasColumnType("jsonb");
 
-        builder.Property(l => l.OutputData)
+        builder.Property(l => l.OutputDataJson)
             .HasColumnName("output_data")
             .HasColumnType("jsonb");
 
@@ -72,7 +72,7 @@ public class ExecutionLogConfiguration : IEntityTypeConfiguration<ExecutionLog>
 
         // Relationships
         builder.HasOne(l => l.Execution)
-            .WithMany(e => e.ExecutionLogs)
+            .WithMany(e => e.Logs)
             .HasForeignKey(l => l.ExecutionId)
             .OnDelete(DeleteBehavior.Cascade);
     }

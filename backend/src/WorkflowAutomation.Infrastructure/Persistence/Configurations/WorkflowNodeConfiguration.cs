@@ -37,7 +37,7 @@ public class WorkflowNodeConfiguration : IEntityTypeConfiguration<WorkflowNode>
         builder.Property(n => n.PositionY)
             .HasColumnName("position_y");
 
-        builder.Property(n => n.Configuration)
+        builder.Property(n => n.ConfigurationJson)
             .HasColumnName("configuration")
             .HasColumnType("jsonb")
             .IsRequired();

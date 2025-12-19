@@ -14,7 +14,7 @@ public class WorkflowExecutionRepository : GenericRepository<WorkflowExecution>,
     public async Task<WorkflowExecution?> GetByIdWithLogsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .Include(e => e.ExecutionLogs.OrderBy(l => l.CreatedAt))
+            .Include(e => e.Logs.OrderBy(l => l.CreatedAt))
             .Include(e => e.Workflow)
             .Include(e => e.User)
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
