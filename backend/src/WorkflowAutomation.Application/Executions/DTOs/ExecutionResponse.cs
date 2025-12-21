@@ -1,0 +1,18 @@
+using WorkflowAutomation.Domain.Enums;
+
+namespace WorkflowAutomation.Application.Executions.DTOs;
+
+public class ExecutionResponse
+{
+    public Guid Id { get; set; }
+    public Guid WorkflowId { get; set; }
+    public Guid? UserId { get; set; }
+    public ExecutionStatus Status { get; set; }
+    public DateTime? StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string ExecutionContextJson { get; set; } = "{}";
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public TimeSpan? Duration { get; set; }
+}
