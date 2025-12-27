@@ -20,6 +20,7 @@ import type { WorkflowNode } from '../types/workflow';
 import CustomNode from '../components/workflow/CustomNode';
 import NodePalette from '../components/workflow/NodePalette';
 import NodeConfigPanel from '../components/workflow/NodeConfigPanel';
+import { validateWorkflow, type ValidationError } from '../utils/workflowValidation';
 
 const nodeTypes = {
   start: CustomNode,
@@ -73,6 +74,8 @@ export default function WorkflowDesigner() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [validationWarnings, setValidationWarnings] = useState<ValidationError[]>([]);
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
   const navigate = useNavigate();
 
@@ -202,9 +205,24 @@ export default function WorkflowDesigner() {
     );
   }, [setNodes]);
 
+  const handleValidate = useCallback(() => {
+    const result = validateWorkflow(nodes, edges);
+    setValidationErrors(result.errors);
+    setValidationWarnings(result.warnings);
+    return result;
+  }, [nodes, edges]);
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
+
+    // Validate workflow before saving
+    const validationResult = handleValidate();
+    if (!validationResult.isValid) {
+      setError('Please fix validation errors before saving');
+      setSaving(false);
+      return;
+    }
 
     try {
       // Convert React Flow nodes to backend format
@@ -323,6 +341,12 @@ export default function WorkflowDesigner() {
               </div>
 
               <button
+                onClick={handleValidate}
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Validate
+              </button>
+              <button
                 onClick={() => navigate('/dashboard/workflows')}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
@@ -340,6 +364,28 @@ export default function WorkflowDesigner() {
             {error && (
               <div className="mt-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
                 {error}
+              </div>
+            )}
+
+            {validationErrors.length > 0 && (
+              <div className="mt-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <p className="font-semibold mb-2">Validation Errors:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {validationErrors.map((err, index) => (
+                    <li key={index}>{err.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {validationWarnings.length > 0 && (
+              <div className="mt-4 bg-yellow-50 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                <p className="font-semibold mb-2">Validation Warnings:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {validationWarnings.map((warn, index) => (
+                    <li key={index}>{warn.message}</li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
