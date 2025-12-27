@@ -1,0 +1,19 @@
+services:
+  migrate:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /src/WorkflowAutomation.Infrastructure
+    volumes:
+      - ./src:/src
+    command: >
+      sh -c "
+      dotnet restore /src/WorkflowAutomation.Infrastructure/WorkflowAutomation.Infrastructure.csproj &&
+      dotnet tool install --global dotnet-ef --version 8.0.0 &&
+      /root/.dotnet/tools/dotnet-ef database update --startup-project /src/WorkflowAutomation.API --connection 'Host=postgres;Port=5432;Database=workflowautomation;Username=postgres;Password=postgres'
+      "
+    networks:
+      - workflow-network
+
+networks:
+  workflow-network:
+    external: true
+    name: backend_workflow-network
