@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkflowAutomation.Application.Executions.DTOs;
+using WorkflowAutomation.Application.Executions.Services;
 using WorkflowAutomation.Domain.Entities;
 using WorkflowAutomation.Domain.Enums;
 using WorkflowAutomation.Domain.Interfaces;
@@ -17,12 +18,18 @@ public class ExecutionController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<ExecutionController> _logger;
+    private readonly IWorkflowExecutionService _executionService;
 
-    public ExecutionController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ExecutionController> logger)
+    public ExecutionController(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        ILogger<ExecutionController> logger,
+        IWorkflowExecutionService executionService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _executionService = executionService;
     }
 
     [HttpGet]
@@ -91,23 +98,22 @@ public class ExecutionController : ControllerBase
 
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
-            var execution = new WorkflowExecution
-            {
-                WorkflowId = request.WorkflowId,
-                UserId = userId,
-                Status = ExecutionStatus.Running,
-                StartedAt = DateTime.UtcNow,
-                ExecutionContextJson = request.InputData ?? "{}"
-            };
+            // Start execution using the service
+            var executionId = await _executionService.StartExecutionAsync(request.WorkflowId, request.InputData, cancellationToken);
 
-            await _unitOfWork.WorkflowExecutions.AddAsync(execution, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            // Update the execution with userId
+            var execution = await _unitOfWork.Repository<WorkflowExecution>().GetByIdAsync(executionId, cancellationToken);
+            if (execution != null)
+            {
+                execution.UserId = userId;
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
 
             _logger.LogInformation("Workflow execution started: {ExecutionId} for workflow {WorkflowId}",
-                execution.Id, request.WorkflowId);
+                executionId, request.WorkflowId);
 
             var response = _mapper.Map<ExecutionResponse>(execution);
-            return CreatedAtAction(nameof(GetById), new { id = execution.Id }, response);
+            return CreatedAtAction(nameof(GetById), new { id = executionId }, response);
         }
         catch (Exception ex)
         {

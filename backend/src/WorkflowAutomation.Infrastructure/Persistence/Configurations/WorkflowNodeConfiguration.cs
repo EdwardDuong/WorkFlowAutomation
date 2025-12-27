@@ -31,6 +31,10 @@ public class WorkflowNodeConfiguration : IEntityTypeConfiguration<WorkflowNode>
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.Property(n => n.Label)
+            .HasColumnName("label")
+            .HasMaxLength(255);
+
         builder.Property(n => n.PositionX)
             .HasColumnName("position_x");
 

@@ -28,8 +28,20 @@ public class WorkflowMappingProfile : Profile
 
         // WorkflowNode mappings
         CreateMap<WorkflowNode, WorkflowNodeResponse>();
+        CreateMap<WorkflowNodeRequest, WorkflowNode>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.WorkflowId, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.Workflow, opt => opt.Ignore());
 
         // WorkflowEdge mappings
         CreateMap<WorkflowEdge, WorkflowEdgeResponse>();
+        CreateMap<WorkflowEdgeRequest, WorkflowEdge>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.WorkflowId, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.Workflow, opt => opt.Ignore());
     }
 }

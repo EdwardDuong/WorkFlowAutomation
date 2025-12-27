@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit:*)",
+      "Bash(git add:*)",
+      "Bash(GIT_AUTHOR_DATE=\"2025-12-19T15:45:00\" GIT_COMMITTER_DATE=\"2025-12-19T15:45:00\" git commit:*)",
+      "Bash(GIT_AUTHOR_DATE=\"2025-12-21T11:15:00\" GIT_COMMITTER_DATE=\"2025-12-21T11:15:00\" git commit:*)",
+      "Bash(git rm:*)",
+      "Bash(GIT_AUTHOR_DATE=\"2025-12-22T16:00:00\" GIT_COMMITTER_DATE=\"2025-12-22T16:00:00\" git commit:*)",
+      "Bash(GIT_AUTHOR_DATE=\"2025-12-23T09:30:00\" GIT_COMMITTER_DATE=\"2025-12-23T09:30:00\" git commit:*)",
+      "Bash(GIT_AUTHOR_DATE=\"2025-12-24T13:00:00\" GIT_COMMITTER_DATE=\"2025-12-24T13:00:00\" git commit:*)",
+      "Bash(GIT_AUTHOR_DATE=\"2025-12-25T14:45:00\" GIT_COMMITTER_DATE=\"2025-12-25T14:45:00\" git commit:*)",
+      "Bash(GIT_AUTHOR_DATE=\"2025-12-26T16:20:00\" GIT_COMMITTER_DATE=\"2025-12-26T16:20:00\" git commit:*)",
+      "Bash(git push:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(curl:*)",
+      "Bash(docker exec:*)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet add package:*)",
+      "Bash(dotnet add reference:*)",
+      "Bash(dotnet test:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 5920 -Force\")",
+      "Bash(powershell:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker ps:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(docker logs:*)",
+      "Bash(dotnet remove:*)"
+    ]
+  }
+}

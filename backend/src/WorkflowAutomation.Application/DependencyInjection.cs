@@ -2,6 +2,7 @@ using System.Reflection;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using WorkflowAutomation.Application.Authentication.Services;
+using WorkflowAutomation.Application.Executions.Services;
 
 namespace WorkflowAutomation.Application;
 
@@ -25,6 +26,10 @@ public static class DependencyInjection
         // Register Authentication Services
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+        // Register Workflow Execution Services
+        services.AddScoped<IWorkflowExecutionService, WorkflowExecutionService>();
+        services.AddHttpClient(); // For HTTP Request node executor
 
         return services;
     }

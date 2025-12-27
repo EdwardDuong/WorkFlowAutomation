@@ -2,8 +2,10 @@ namespace WorkflowAutomation.Domain.Enums;
 
 public enum NodeType
 {
-    HttpRequest = 0,
-    Delay = 1,
-    Condition = 2,
-    Transform = 3
+    Start = 0,
+    HttpRequest = 1,
+    Delay = 2,
+    Condition = 3,
+    Transform = 4,
+    End = 5
 }
