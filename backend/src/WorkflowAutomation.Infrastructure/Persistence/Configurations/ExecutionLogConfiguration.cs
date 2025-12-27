@@ -59,6 +59,10 @@ public class ExecutionLogConfiguration : IEntityTypeConfiguration<ExecutionLog>
             .HasColumnName("created_at")
             .IsRequired();
 
+        builder.Property(l => l.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
+
         // Indexes
         builder.HasIndex(l => l.ExecutionId)
             .HasDatabaseName("idx_logs_execution_id");

@@ -54,7 +54,7 @@ public class ScheduledWorkflowConfiguration : IEntityTypeConfiguration<Scheduled
 
         // Relationships
         builder.HasOne(s => s.Workflow)
-            .WithMany()
+            .WithMany(w => w.ScheduledWorkflows)
             .HasForeignKey(s => s.WorkflowId)
             .OnDelete(DeleteBehavior.Cascade);
     }

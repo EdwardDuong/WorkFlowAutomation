@@ -33,6 +33,10 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .HasColumnName("created_at")
             .IsRequired();
 
+        builder.Property(r => r.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
+
         builder.Property(r => r.RevokedAt)
             .HasColumnName("revoked_at");
 
@@ -54,7 +58,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 
         // Relationships
         builder.HasOne(r => r.User)
-            .WithMany()
+            .WithMany(u => u.RefreshTokens)
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }

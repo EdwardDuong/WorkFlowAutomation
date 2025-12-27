@@ -48,6 +48,10 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .HasColumnName("created_at")
             .IsRequired();
 
+        builder.Property(e => e.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
+
         // Indexes
         builder.HasIndex(e => e.WorkflowId)
             .HasDatabaseName("idx_executions_workflow_id");
@@ -68,7 +72,7 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.User)
-            .WithMany()
+            .WithMany(u => u.WorkflowExecutions)
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 

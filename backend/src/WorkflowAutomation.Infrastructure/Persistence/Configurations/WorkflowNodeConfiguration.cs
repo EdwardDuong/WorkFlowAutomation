@@ -50,6 +50,10 @@ public class WorkflowNodeConfiguration : IEntityTypeConfiguration<WorkflowNode>
             .HasColumnName("created_at")
             .IsRequired();
 
+        builder.Property(n => n.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
+
         // Indexes
         builder.HasIndex(n => n.WorkflowId)
             .HasDatabaseName("idx_workflow_nodes_workflow_id");
