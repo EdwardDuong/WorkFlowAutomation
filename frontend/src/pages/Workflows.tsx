@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Workflow } from '../types';
 import { FiPlus, FiEdit, FiTrash2, FiPlay } from 'react-icons/fi';
+import WorkflowInputDialog from '../components/WorkflowInputDialog';
 
 export default function Workflows() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,14 +39,21 @@ export default function Workflows() {
     }
   };
 
-  const handleRun = async (id: string) => {
+  const handleRunClick = (workflow: Workflow) => {
+    setSelectedWorkflow(workflow);
+  };
+
+  const handleRunWorkflow = async (inputData: string) => {
+    if (!selectedWorkflow) return;
+
     try {
       const response = await api.post('/Execution/start', {
-        workflowId: id,
-        inputData: '{}'
+        workflowId: selectedWorkflow.id,
+        inputData
       });
 
       const executionId = response.data.id;
+      setSelectedWorkflow(null);
       navigate(`/dashboard/executions/${executionId}`);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to start workflow execution');
@@ -139,7 +148,7 @@ export default function Workflows() {
                     </div>
                     <div className="ml-4 flex space-x-2">
                       <button
-                        onClick={() => handleRun(workflow.id)}
+                        onClick={() => handleRunClick(workflow)}
                         disabled={!workflow.isActive}
                         className="inline-flex items-center p-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-white hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Run Workflow"
@@ -167,6 +176,14 @@ export default function Workflows() {
             ))}
           </ul>
         </div>
+      )}
+
+      {selectedWorkflow && (
+        <WorkflowInputDialog
+          workflowName={selectedWorkflow.name}
+          onClose={() => setSelectedWorkflow(null)}
+          onSubmit={handleRunWorkflow}
+        />
       )}
     </div>
   );
