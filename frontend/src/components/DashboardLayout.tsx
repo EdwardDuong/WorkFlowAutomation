@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { FiLogOut, FiList, FiPlay, FiHome } from 'react-icons/fi';
+import { FiLogOut, FiList, FiPlay, FiHome, FiClock } from 'react-icons/fi';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
@@ -16,6 +16,7 @@ export default function DashboardLayout() {
     { path: '/dashboard', icon: FiHome, label: 'Dashboard' },
     { path: '/dashboard/workflows', icon: FiList, label: 'Workflows' },
     { path: '/dashboard/executions', icon: FiPlay, label: 'Executions' },
+    { path: '/dashboard/schedules', icon: FiClock, label: 'Schedules' },
   ];
 
   return (
