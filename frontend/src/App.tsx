@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Workflows from './pages/Workflows';
 import WorkflowDesigner from './pages/WorkflowDesigner';
 import Executions from './pages/Executions';
+import ExecutionDetail from './pages/ExecutionDetail';
 import DashboardLayout from './components/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -29,6 +30,7 @@ function App() {
           <Route path="workflows/new" element={<WorkflowDesigner />} />
           <Route path="workflows/:id" element={<WorkflowDesigner />} />
           <Route path="executions" element={<Executions />} />
+          <Route path="executions/:id" element={<ExecutionDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -34,10 +34,30 @@ export interface Workflow {
   updatedAt: string;
 }
 
+export interface WorkflowNodeRequest {
+  nodeId: string;
+  nodeType: number;
+  label?: string;
+  positionX?: number;
+  positionY?: number;
+  configurationJson: string;
+}
+
+export interface WorkflowEdgeRequest {
+  edgeId: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+  edgeType?: string;
+}
+
 export interface CreateWorkflowRequest {
   name: string;
   description?: string;
   isActive: boolean;
+  nodes?: WorkflowNodeRequest[];
+  edges?: WorkflowEdgeRequest[];
 }
 
 export interface UpdateWorkflowRequest {

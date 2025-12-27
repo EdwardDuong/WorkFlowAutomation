@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Workflow } from '../types';
 import { FiPlus, FiEdit, FiTrash2, FiPlay } from 'react-icons/fi';
@@ -8,6 +8,7 @@ export default function Workflows() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchWorkflows();
@@ -33,6 +34,20 @@ export default function Workflows() {
       setWorkflows(workflows.filter((w) => w.id !== id));
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to delete workflow');
+    }
+  };
+
+  const handleRun = async (id: string) => {
+    try {
+      const response = await api.post('/Execution/start', {
+        workflowId: id,
+        inputData: '{}'
+      });
+
+      const executionId = response.data.id;
+      navigate(`/dashboard/executions/${executionId}`);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to start workflow execution');
     }
   };
 
@@ -123,6 +138,14 @@ export default function Workflows() {
                       </div>
                     </div>
                     <div className="ml-4 flex space-x-2">
+                      <button
+                        onClick={() => handleRun(workflow.id)}
+                        disabled={!workflow.isActive}
+                        className="inline-flex items-center p-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-white hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Run Workflow"
+                      >
+                        <FiPlay />
+                      </button>
                       <Link
                         to={`/dashboard/workflows/${workflow.id}`}
                         className="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
