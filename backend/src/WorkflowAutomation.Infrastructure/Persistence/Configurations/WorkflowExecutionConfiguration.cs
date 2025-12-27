@@ -40,7 +40,7 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .HasColumnName("error_message")
             .HasMaxLength(2000);
 
-        builder.Property(e => e.ExecutionContextJson)
+        builder.Property(e => e.ExecutionContext)
             .HasColumnName("execution_context")
             .HasColumnType("jsonb");
 
@@ -76,7 +76,7 @@ public class WorkflowExecutionConfiguration : IEntityTypeConfiguration<WorkflowE
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(e => e.Logs)
+        builder.HasMany(e => e.ExecutionLogs)
             .WithOne(l => l.Execution)
             .HasForeignKey(l => l.ExecutionId)
             .OnDelete(DeleteBehavior.Cascade);

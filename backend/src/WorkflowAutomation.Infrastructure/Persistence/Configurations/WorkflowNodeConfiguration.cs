@@ -31,17 +31,13 @@ public class WorkflowNodeConfiguration : IEntityTypeConfiguration<WorkflowNode>
             .HasMaxLength(100)
             .IsRequired();
 
-        builder.Property(n => n.Label)
-            .HasColumnName("label")
-            .HasMaxLength(255);
-
         builder.Property(n => n.PositionX)
             .HasColumnName("position_x");
 
         builder.Property(n => n.PositionY)
             .HasColumnName("position_y");
 
-        builder.Property(n => n.ConfigurationJson)
+        builder.Property(n => n.Configuration)
             .HasColumnName("configuration")
             .HasColumnType("jsonb")
             .IsRequired();

@@ -25,9 +25,17 @@ RUN dotnet publish "WorkflowAutomation.API.csproj" -c Release -o /app/publish /p
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Copy published app
+# Create a non-root user for security
+RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
+USER appuser
+
+# Copy published files
 COPY --from=publish /app/publish .
 
+# Expose port
 EXPOSE 8080
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "WorkflowAutomation.API.dll"]

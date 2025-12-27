@@ -1,13 +1,14 @@
 version: '3.8'
 
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: workflow-postgres
     environment:
-      POSTGRES_DB: workflowautomation
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: workflowautomation
     ports:
       - "5432:5432"
     volumes:
@@ -20,6 +21,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # .NET API
   api:
     build:
       context: .
@@ -29,17 +31,26 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=workflowautomation;Username=postgres;Password=postgres
+      - JwtSettings__Secret=workflow-automation-production-jwt-secret-key-minimum-32-characters-required-for-hs256
+      - JwtSettings__Issuer=WorkflowAutomation.API
+      - JwtSettings__Audience=WorkflowAutomation.Client
+      - JwtSettings__AccessTokenExpirationMinutes=15
+      - JwtSettings__RefreshTokenExpirationDays=7
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./src/WorkflowAutomation.API/logs:/app/logs
     networks:
       - workflow-network
-
-volumes:
-  postgres_data:
+    restart: unless-stopped
 
 networks:
   workflow-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
