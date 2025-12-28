@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 import type { Workflow } from '../types';
 import { FiPlus, FiEdit, FiTrash2, FiPower, FiClock, FiPlay, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
@@ -59,7 +60,7 @@ export default function Schedules() {
 
     // Validate cron expression
     if (!cronValidation.isValid) {
-      alert('Please enter a valid cron expression');
+      toast.error('Please enter a valid cron expression');
       return;
     }
 
@@ -75,8 +76,10 @@ export default function Schedules() {
     try {
       if (editingId) {
         await api.put(`/ScheduledWorkflow/${editingId}`, formData);
+        toast.success('Schedule updated successfully');
       } else {
         await api.post('/ScheduledWorkflow', formData);
+        toast.success('Schedule created successfully');
       }
 
       setShowForm(false);
@@ -85,7 +88,7 @@ export default function Schedules() {
       setParamError(null);
       await fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to save schedule');
+      toast.error(err.response?.data?.message || 'Failed to save schedule');
     }
   };
 
@@ -101,13 +104,14 @@ export default function Schedules() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this schedule?')) return;
+    if (!window.confirm('Are you sure you want to delete this schedule?')) return;
 
     try {
       await api.delete(`/ScheduledWorkflow/${id}`);
+      toast.success('Schedule deleted successfully');
       await fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete schedule');
+      toast.error(err.response?.data?.message || 'Failed to delete schedule');
     }
   };
 
@@ -115,12 +119,14 @@ export default function Schedules() {
     try {
       if (schedule.isActive) {
         await api.post(`/ScheduledWorkflow/${schedule.id}/deactivate`);
+        toast.success('Schedule deactivated');
       } else {
         await api.post(`/ScheduledWorkflow/${schedule.id}/activate`);
+        toast.success('Schedule activated');
       }
       await fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to toggle schedule');
+      toast.error(err.response?.data?.message || 'Failed to toggle schedule');
     }
   };
 
@@ -132,9 +138,10 @@ export default function Schedules() {
       });
 
       const executionId = response.data.id;
+      toast.success('Workflow execution started');
       navigate(`/dashboard/executions/${executionId}`);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to start workflow execution');
+      toast.error(err.response?.data?.message || 'Failed to start workflow execution');
     }
   };
 

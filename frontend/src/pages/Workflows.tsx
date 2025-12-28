@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 import type { Workflow } from '../types';
 import { FiPlus, FiEdit, FiTrash2, FiPlay } from 'react-icons/fi';
@@ -29,13 +30,14 @@ export default function Workflows() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this workflow?')) return;
+    if (!window.confirm('Are you sure you want to delete this workflow?')) return;
 
     try {
       await api.delete(`/Workflow/${id}`);
       setWorkflows(workflows.filter((w) => w.id !== id));
+      toast.success('Workflow deleted successfully');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete workflow');
+      toast.error(err.response?.data?.message || 'Failed to delete workflow');
     }
   };
 
@@ -54,9 +56,10 @@ export default function Workflows() {
 
       const executionId = response.data.id;
       setSelectedWorkflow(null);
+      toast.success('Workflow execution started');
       navigate(`/dashboard/executions/${executionId}`);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to start workflow execution');
+      toast.error(err.response?.data?.message || 'Failed to start workflow execution');
     }
   };
 
