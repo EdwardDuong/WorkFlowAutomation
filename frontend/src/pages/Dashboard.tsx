@@ -1,8 +1,9 @@
 import { useAuthStore } from '../store/authStore';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiList, FiPlay, FiClock, FiCheckCircle } from 'react-icons/fi';
+import { FiPlus, FiList, FiPlay, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import type { WorkflowExecution, Workflow } from '../types';
 
 interface DashboardStats {
   totalWorkflows: number;
@@ -18,6 +19,8 @@ export default function Dashboard() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recentExecutions, setRecentExecutions] = useState<WorkflowExecution[]>([]);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
 
   useEffect(() => {
     fetchStats();
@@ -26,33 +29,41 @@ export default function Dashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [workflows, schedules, executions] = await Promise.all([
-        api.get('/Workflow'),
+      const [workflowsResponse, schedules, executionsResponse] = await Promise.all([
+        api.get<Workflow[]>('/Workflow'),
         api.get('/ScheduledWorkflow'),
-        api.get('/Execution')
+        api.get<WorkflowExecution[]>('/Execution')
       ]);
 
-      const activeWorkflows = workflows.data.filter((w: any) => w.isActive).length;
+      setWorkflows(workflowsResponse.data);
+
+      const activeWorkflows = workflowsResponse.data.filter((w: any) => w.isActive).length;
       const activeSchedules = schedules.data.filter((s: any) => s.isActive).length;
 
       const now = new Date();
       const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const recentExecs = executions.data.filter((e: any) =>
+      const recentExecs = executionsResponse.data.filter((e: any) =>
         new Date(e.startedAt) > last24Hours
       );
 
-      const successfulExecs = executions.data.filter((e: any) =>
-        e.status === 'Completed'
+      // Get last 10 executions, sorted by creation date
+      const sortedExecutions = [...executionsResponse.data].sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setRecentExecutions(sortedExecutions.slice(0, 10));
+
+      const successfulExecs = executionsResponse.data.filter((e: any) =>
+        e.status === 2 // Completed
       ).length;
 
-      const failedExecs = executions.data.filter((e: any) =>
-        e.status === 'Failed'
+      const failedExecs = executionsResponse.data.filter((e: any) =>
+        e.status === 3 // Failed
       ).length;
 
       setStats({
-        totalWorkflows: workflows.data.length,
+        totalWorkflows: workflowsResponse.data.length,
         activeWorkflows,
-        totalExecutions: executions.data.length,
+        totalExecutions: executionsResponse.data.length,
         activeSchedules,
         recentExecutions: recentExecs.length,
         successfulExecutions: successfulExecs,
@@ -211,6 +222,85 @@ export default function Dashboard() {
                 <p className="text-xs text-gray-500 mt-2">
                   {stats?.successfulExecutions || 0} succeeded, {stats?.failedExecutions || 0} failed
                 </p>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="mt-8">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
+              <div className="bg-white shadow rounded-lg">
+                {recentExecutions.length === 0 ? (
+                  <div className="p-6 text-center text-gray-500">
+                    <FiPlay className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                    <p>No recent executions</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-200">
+                    {recentExecutions.map((execution) => {
+                      const workflow = workflows.find(w => w.id === execution.workflowId);
+                      const statusIcon = execution.status === 2 ? (
+                        <FiCheckCircle className="text-green-500" />
+                      ) : execution.status === 3 ? (
+                        <FiXCircle className="text-red-500" />
+                      ) : execution.status === 1 ? (
+                        <FiPlay className="text-blue-500" />
+                      ) : (
+                        <FiClock className="text-gray-500" />
+                      );
+
+                      const statusColor = execution.status === 2
+                        ? 'bg-green-100 text-green-800'
+                        : execution.status === 3
+                        ? 'bg-red-100 text-red-800'
+                        : execution.status === 1
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800';
+
+                      const statusLabel = execution.status === 2
+                        ? 'Completed'
+                        : execution.status === 3
+                        ? 'Failed'
+                        : execution.status === 1
+                        ? 'Running'
+                        : 'Pending';
+
+                      return (
+                        <li key={execution.id}>
+                          <Link
+                            to={`/dashboard/executions/${execution.id}`}
+                            className="block px-6 py-4 hover:bg-gray-50"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center flex-1 min-w-0">
+                                <div className="flex-shrink-0">
+                                  {statusIcon}
+                                </div>
+                                <div className="ml-4 flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 truncate">
+                                    {workflow?.name || 'Unknown Workflow'}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {new Date(execution.createdAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="ml-4 flex-shrink-0">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                            </div>
+                            {execution.errorMessage && (
+                              <div className="mt-2 text-sm text-red-600 truncate">
+                                Error: {execution.errorMessage}
+                              </div>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             </div>
           </>
