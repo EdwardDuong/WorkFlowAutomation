@@ -1,57 +1,16 @@
-# Ignore build outputs
-**/bin/
-**/obj/
-**/out/
-**/publish/
-
-# Ignore IDE and editor files
-**/.vs/
-**/.vscode/
-**/.idea/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-
-# Ignore logs
-**/logs/
-*.log
-
-# Ignore NuGet packages
-**/packages/
-*.nupkg
-
-# Ignore test results
-**/TestResults/
-**/*.trx
-
-# Ignore Git files
-.git/
-.gitignore
-.gitattributes
-
-# Ignore Docker files
-**/Dockerfile*
-**/docker-compose*
-.dockerignore
-
-# Ignore documentation
-**/*.md
-LICENSE
-README.md
-
-# Ignore OS files
-**/.DS_Store
-**/Thumbs.db
-
-# Ignore environment files
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/*.user
+**/*.suo
+**/node_modules
+**/dist
+**/build
+**/.git
+**/.gitignore
+**/README.md
 **/.env
-**/.env.*
-
-# Ignore other configuration files
-**/azds.yaml
-**/secrets.dev.yaml
-**/values.dev.yaml
+**/*.md
+**/docker-compose*
+**/Dockerfile*
