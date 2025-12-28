@@ -18,7 +18,10 @@ public class WorkflowExecutionService : IWorkflowExecutionService
     public WorkflowExecutionService(
         IUnitOfWork unitOfWork,
         ILogger<WorkflowExecutionService> logger,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        ILogger<EmailNodeExecutor> emailLogger,
+        ILogger<ScriptNodeExecutor> scriptLogger,
+        ILogger<DatabaseNodeExecutor> databaseLogger)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -27,7 +30,10 @@ public class WorkflowExecutionService : IWorkflowExecutionService
             { NodeType.HttpRequest, new HttpRequestNodeExecutor(httpClientFactory) },
             { NodeType.Condition, new ConditionNodeExecutor() },
             { NodeType.Transform, new TransformNodeExecutor() },
-            { NodeType.Delay, new DelayNodeExecutor() }
+            { NodeType.Delay, new DelayNodeExecutor() },
+            { NodeType.Email, new EmailNodeExecutor(emailLogger) },
+            { NodeType.Script, new ScriptNodeExecutor(scriptLogger) },
+            { NodeType.Database, new DatabaseNodeExecutor(databaseLogger) }
         };
     }
 

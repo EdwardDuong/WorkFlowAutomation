@@ -7,5 +7,8 @@ public enum NodeType
     Delay = 2,
     Condition = 3,
     Transform = 4,
-    End = 5
+    End = 5,
+    Email = 6,
+    Script = 7,
+    Database = 8
 }
