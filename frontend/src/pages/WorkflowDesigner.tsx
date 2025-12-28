@@ -29,6 +29,9 @@ const nodeTypes = {
   transform: CustomNode,
   delay: CustomNode,
   end: CustomNode,
+  email: CustomNode,
+  script: CustomNode,
+  database: CustomNode,
 };
 
 const initialNodes: WorkflowNode[] = [
@@ -49,6 +52,9 @@ const nodeTypeToNumber = (type: NodeType): number => {
     case NodeType.CONDITION: return 3;
     case NodeType.TRANSFORM: return 4;
     case NodeType.END: return 5;
+    case NodeType.EMAIL: return 6;
+    case NodeType.SCRIPT: return 7;
+    case NodeType.DATABASE: return 8;
     default: return 0;
   }
 };
@@ -62,6 +68,9 @@ const numberToNodeType = (num: number): NodeType => {
     case 3: return NodeType.CONDITION;
     case 4: return NodeType.TRANSFORM;
     case 5: return NodeType.END;
+    case 6: return NodeType.EMAIL;
+    case 7: return NodeType.SCRIPT;
+    case 8: return NodeType.DATABASE;
     default: return NodeType.START;
   }
 };

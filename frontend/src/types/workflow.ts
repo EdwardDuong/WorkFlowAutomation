@@ -6,7 +6,10 @@ export type NodeType =
   | 'condition'
   | 'transform'
   | 'delay'
-  | 'end';
+  | 'end'
+  | 'email'
+  | 'script'
+  | 'database';
 
 export const NodeType = {
   START: 'start' as const,
@@ -15,6 +18,9 @@ export const NodeType = {
   TRANSFORM: 'transform' as const,
   DELAY: 'delay' as const,
   END: 'end' as const,
+  EMAIL: 'email' as const,
+  SCRIPT: 'script' as const,
+  DATABASE: 'database' as const,
 };
 
 export interface NodeData extends Record<string, unknown> {
@@ -101,5 +107,47 @@ export const NODE_CONFIGS: NodeConfig[] = [
     description: 'Workflow completion',
     icon: '🏁',
     color: 'bg-red-500',
+  },
+  {
+    id: 'email',
+    type: NodeType.EMAIL,
+    label: 'Send Email',
+    description: 'Send email via SMTP',
+    icon: '📧',
+    color: 'bg-pink-500',
+    defaultConfig: {
+      from: '',
+      to: '',
+      subject: '',
+      body: '',
+      smtpServer: 'localhost',
+      smtpPort: 25,
+      useSsl: true,
+    },
+  },
+  {
+    id: 'script',
+    type: NodeType.SCRIPT,
+    label: 'Run Script',
+    description: 'Execute C# code',
+    icon: '📜',
+    color: 'bg-indigo-500',
+    defaultConfig: {
+      code: '// Access: context, previousOutput, inputData\nreturn "Hello World";',
+    },
+  },
+  {
+    id: 'database',
+    type: NodeType.DATABASE,
+    label: 'Database Query',
+    description: 'Execute SQL query',
+    icon: '🗄️',
+    color: 'bg-teal-500',
+    defaultConfig: {
+      databaseType: 'PostgreSQL',
+      connectionString: '',
+      query: 'SELECT * FROM table',
+      isStoredProcedure: false,
+    },
   },
 ];
