@@ -404,8 +404,9 @@ export default function WorkflowDesigner() {
                 onNodeClick={onNodeClick}
                 onPaneClick={onPaneClick}
                 nodeTypes={nodeTypes}
-                nodesDeletable={true}
-                edgesDeletable={true}
+                nodesDraggable={true}
+                nodesConnectable={true}
+                elementsSelectable={true}
                 fitView
               >
                 <Controls />

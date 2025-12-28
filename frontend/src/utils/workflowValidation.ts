@@ -177,7 +177,7 @@ export function validateWorkflow(
 
 function getReachableNodes(
   startNodeId: string,
-  nodes: WorkflowNode[],
+  _nodes: WorkflowNode[],
   edges: Edge[]
 ): Set<string> {
   const reachable = new Set<string>();
