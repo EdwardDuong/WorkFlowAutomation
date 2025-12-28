@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import type { Workflow, WorkflowDetail, CreateWorkflowRequest, WorkflowNodeRequest, WorkflowEdgeRequest } from '../types';
 import { FiPlus, FiEdit, FiTrash2, FiPlay, FiCopy, FiSearch } from 'react-icons/fi';
 import WorkflowInputDialog from '../components/WorkflowInputDialog';
+import Pagination from '../components/Pagination';
 
 export default function Workflows() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -15,6 +16,8 @@ export default function Workflows() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,6 +131,19 @@ export default function Workflows() {
     });
   }, [workflows, searchQuery, statusFilter]);
 
+  const paginatedWorkflows = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredWorkflows.slice(startIndex, endIndex);
+  }, [filteredWorkflows, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredWorkflows.length / itemsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
@@ -141,10 +157,10 @@ export default function Workflows() {
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.size === filteredWorkflows.length) {
+    if (selectedIds.size === paginatedWorkflows.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredWorkflows.map(w => w.id)));
+      setSelectedIds(new Set(paginatedWorkflows.map(w => w.id)));
     }
   };
 
@@ -372,20 +388,21 @@ export default function Workflows() {
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedIds.size === filteredWorkflows.length && filteredWorkflows.length > 0}
-                onChange={handleSelectAll}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <span className="ml-2 text-sm text-gray-700 font-medium">Select All</span>
-            </label>
-          </div>
-          <ul className="divide-y divide-gray-200">
-            {filteredWorkflows.map((workflow) => (
+        <>
+          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === paginatedWorkflows.length && paginatedWorkflows.length > 0}
+                  onChange={handleSelectAll}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 font-medium">Select All (on this page)</span>
+              </label>
+            </div>
+            <ul className="divide-y divide-gray-200">
+              {paginatedWorkflows.map((workflow) => (
               <li key={workflow.id}>
                 <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
@@ -464,8 +481,17 @@ export default function Workflows() {
                 </div>
               </li>
             ))}
-          </ul>
-        </div>
+            </ul>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredWorkflows.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </div>
+        </>
       )}
 
       {selectedWorkflow && (

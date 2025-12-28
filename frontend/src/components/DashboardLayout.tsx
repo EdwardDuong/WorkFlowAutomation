@@ -1,11 +1,33 @@
+import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { FiLogOut, FiList, FiPlay, FiHome, FiClock } from 'react-icons/fi';
+import { FiLogOut, FiList, FiPlay, FiHome, FiClock, FiHelpCircle } from 'react-icons/fi';
+import { useGlobalShortcuts, useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import KeyboardShortcutsDialog from './KeyboardShortcutsDialog';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Enable global shortcuts
+  useGlobalShortcuts();
+
+  // Add shortcut to show help dialog
+  useKeyboardShortcuts([
+    {
+      key: '?',
+      shiftKey: true,
+      action: () => setShowShortcuts(true),
+      description: 'Show keyboard shortcuts',
+    },
+    {
+      key: 'Escape',
+      action: () => setShowShortcuts(false),
+      description: 'Close dialog',
+    },
+  ]);
 
   const handleLogout = () => {
     logout();
@@ -50,8 +72,16 @@ export default function DashboardLayout() {
                 })}
               </div>
             </div>
-            <div className="flex items-center">
-              <span className="text-sm text-gray-700 mr-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowShortcuts(true)}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                title="Keyboard shortcuts (?)"
+              >
+                <FiHelpCircle className="mr-2" />
+                Shortcuts
+              </button>
+              <span className="text-sm text-gray-700">
                 {user?.fullName || user?.email}
               </span>
               <button
@@ -70,6 +100,11 @@ export default function DashboardLayout() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <Outlet />
       </main>
+
+      {/* Keyboard Shortcuts Dialog */}
+      {showShortcuts && (
+        <KeyboardShortcutsDialog onClose={() => setShowShortcuts(false)} />
+      )}
     </div>
   );
 }

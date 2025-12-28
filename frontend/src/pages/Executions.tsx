@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import type { WorkflowExecution, Workflow } from '../types';
 import { FiClock, FiCheckCircle, FiXCircle, FiAlertCircle, FiRefreshCw, FiEye, FiRotateCw } from 'react-icons/fi';
+import Pagination from '../components/Pagination';
 
 export default function Executions() {
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
@@ -12,6 +13,8 @@ export default function Executions() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [workflowFilter, setWorkflowFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(15);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -107,11 +110,26 @@ export default function Executions() {
     }
   };
 
-  const filteredExecutions = executions.filter((execution) => {
-    const statusMatch = statusFilter === 'all' || execution.status.toString() === statusFilter;
-    const workflowMatch = workflowFilter === 'all' || execution.workflowId === workflowFilter;
-    return statusMatch && workflowMatch;
-  });
+  const filteredExecutions = useMemo(() => {
+    return executions.filter((execution) => {
+      const statusMatch = statusFilter === 'all' || execution.status.toString() === statusFilter;
+      const workflowMatch = workflowFilter === 'all' || execution.workflowId === workflowFilter;
+      return statusMatch && workflowMatch;
+    });
+  }, [executions, statusFilter, workflowFilter]);
+
+  const paginatedExecutions = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredExecutions.slice(startIndex, endIndex);
+  }, [filteredExecutions, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredExecutions.length / itemsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, workflowFilter]);
 
   if (loading) {
     return (
@@ -208,9 +226,10 @@ export default function Executions() {
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {filteredExecutions.map((execution) => (
+        <>
+          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul className="divide-y divide-gray-200">
+              {paginatedExecutions.map((execution) => (
               <li key={execution.id}>
                 <Link
                   to={`/dashboard/executions/${execution.id}`}
@@ -268,9 +287,18 @@ export default function Executions() {
                   </div>
                 </Link>
               </li>
-            ))}
-          </ul>
-        </div>
+              ))}
+            </ul>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredExecutions.length}
+              itemsPerPage={itemsPerPage}
+            />
+          </div>
+        </>
       )}
     </div>
   );
