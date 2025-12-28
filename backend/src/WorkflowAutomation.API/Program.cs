@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using WorkflowAutomation.Application;
@@ -64,6 +65,26 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Run database migrations in development
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<WorkflowAutomation.Infrastructure.Persistence.ApplicationDbContext>();
+            Log.Information("Applying database migrations...");
+            context.Database.Migrate();
+            Log.Information("Database migrations applied successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while migrating the database");
+        }
+    }
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
