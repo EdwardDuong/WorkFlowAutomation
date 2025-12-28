@@ -20,7 +20,10 @@ import type { WorkflowNode } from '../types/workflow';
 import CustomNode from '../components/workflow/CustomNode';
 import NodePalette from '../components/workflow/NodePalette';
 import NodeConfigPanel from '../components/workflow/NodeConfigPanel';
+import WorkflowTemplatesDialog from '../components/WorkflowTemplatesDialog';
 import { validateWorkflow, type ValidationError } from '../utils/workflowValidation';
+import type { WorkflowTemplate } from '../data/workflowTemplates';
+import { toast } from 'sonner';
 
 const nodeTypes = {
   start: CustomNode,
@@ -86,6 +89,7 @@ export default function WorkflowDesigner() {
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<ValidationError[]>([]);
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
+  const [showTemplatesDialog, setShowTemplatesDialog] = useState(false);
   const navigate = useNavigate();
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -278,6 +282,88 @@ export default function WorkflowDesigner() {
     }
   };
 
+  const handleSelectTemplate = useCallback((template: WorkflowTemplate) => {
+    // Load template nodes and edges
+    setNodes(template.nodes as WorkflowNode[]);
+    setEdges(template.edges as Edge[]);
+
+    // Optionally set name and description if not editing an existing workflow
+    if (!id) {
+      setName(template.name);
+      setDescription(template.description);
+    }
+
+    setShowTemplatesDialog(false);
+    toast.success(`Template "${template.name}" loaded successfully`);
+  }, [id, setNodes, setEdges]);
+
+  const handleExportWorkflow = useCallback(() => {
+    const workflowData = {
+      name,
+      description,
+      isActive,
+      nodes: nodes.map((node) => ({
+        id: node.id,
+        type: node.type,
+        position: node.position,
+        data: node.data,
+      })),
+      edges: edges.map((edge) => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        type: edge.type,
+      })),
+    };
+
+    const dataStr = JSON.stringify(workflowData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name || 'workflow'}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success('Workflow exported successfully');
+  }, [name, description, isActive, nodes, edges]);
+
+  const handleImportWorkflow = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const workflowData = JSON.parse(text);
+
+        // Validate the imported data
+        if (!workflowData.nodes || !workflowData.edges) {
+          throw new Error('Invalid workflow file format');
+        }
+
+        // Load the workflow data
+        setName(workflowData.name || 'Imported Workflow');
+        setDescription(workflowData.description || '');
+        setIsActive(workflowData.isActive !== undefined ? workflowData.isActive : true);
+        setNodes(workflowData.nodes);
+        setEdges(workflowData.edges);
+
+        toast.success('Workflow imported successfully');
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to import workflow');
+      }
+    };
+    input.click();
+  }, [setNodes, setEdges]);
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -349,6 +435,25 @@ export default function WorkflowDesigner() {
                 </label>
               </div>
 
+              <button
+                onClick={() => setShowTemplatesDialog(true)}
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Templates
+              </button>
+              <button
+                onClick={handleImportWorkflow}
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Import
+              </button>
+              <button
+                onClick={handleExportWorkflow}
+                disabled={!name || nodes.length === 0}
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                Export
+              </button>
               <button
                 onClick={handleValidate}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -434,6 +539,13 @@ export default function WorkflowDesigner() {
           </div>
         </div>
       </div>
+
+      {showTemplatesDialog && (
+        <WorkflowTemplatesDialog
+          onClose={() => setShowTemplatesDialog(false)}
+          onSelectTemplate={handleSelectTemplate}
+        />
+      )}
     </div>
   );
 }
