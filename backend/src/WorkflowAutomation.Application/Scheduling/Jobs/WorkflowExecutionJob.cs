@@ -31,31 +31,36 @@ public class WorkflowExecutionJob : IJob
 
         try
         {
-            // Start workflow execution
-            var executionId = await _executionService.StartExecutionAsync(workflowId, "{}", context.CancellationToken);
+            // Get schedule to retrieve parameters
+            var schedule = await _unitOfWork.Repository<ScheduledWorkflow>()
+                .GetByIdAsync(scheduleId, context.CancellationToken);
+
+            if (schedule == null)
+            {
+                _logger.LogError("Schedule {ScheduleId} not found", scheduleId);
+                return;
+            }
+
+            // Start workflow execution with stored parameters
+            var parameters = string.IsNullOrWhiteSpace(schedule.Parameters) ? "{}" : schedule.Parameters;
+            var executionId = await _executionService.StartExecutionAsync(workflowId, parameters, context.CancellationToken);
 
             _logger.LogInformation("Started scheduled execution {ExecutionId} for workflow {WorkflowId}", executionId, workflowId);
 
             // Update last run time
-            var schedule = await _unitOfWork.Repository<ScheduledWorkflow>()
-                .GetByIdAsync(scheduleId, context.CancellationToken);
+            schedule.UpdateLastRun(DateTime.UtcNow);
 
-            if (schedule != null)
+            // Calculate next run time from cron expression
+            var cronExpression = new CronExpression(schedule.CronExpression);
+            var nextRun = cronExpression.GetNextValidTimeAfter(DateTimeOffset.UtcNow);
+            if (nextRun.HasValue)
             {
-                schedule.UpdateLastRun(DateTime.UtcNow);
-
-                // Calculate next run time from cron expression
-                var cronExpression = new CronExpression(schedule.CronExpression);
-                var nextRun = cronExpression.GetNextValidTimeAfter(DateTimeOffset.UtcNow);
-                if (nextRun.HasValue)
-                {
-                    schedule.UpdateNextRun(nextRun.Value.UtcDateTime);
-                }
-
-                await _unitOfWork.SaveChangesAsync(context.CancellationToken);
-
-                _logger.LogInformation("Updated schedule {ScheduleId}, next run at {NextRun}", scheduleId, schedule.NextRunAt);
+                schedule.UpdateNextRun(nextRun.Value.UtcDateTime);
             }
+
+            await _unitOfWork.SaveChangesAsync(context.CancellationToken);
+
+            _logger.LogInformation("Updated schedule {ScheduleId}, next run at {NextRun}", scheduleId, schedule.NextRunAt);
         }
         catch (Exception ex)
         {

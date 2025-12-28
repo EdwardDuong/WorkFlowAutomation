@@ -9,6 +9,7 @@ interface ScheduledWorkflow {
   workflowName: string;
   cronExpression: string;
   isActive: boolean;
+  parameters?: string;
   lastRunAt?: string;
   nextRunAt?: string;
   createdAt: string;
@@ -26,7 +27,9 @@ export default function Schedules() {
     workflowId: '',
     cronExpression: '',
     isActive: true,
+    parameters: '{}',
   });
+  const [paramError, setParamError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -51,6 +54,15 @@ export default function Schedules() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate JSON parameters
+    try {
+      JSON.parse(formData.parameters);
+      setParamError(null);
+    } catch (err) {
+      setParamError('Invalid JSON format');
+      return;
+    }
+
     try {
       if (editingId) {
         await api.put(`/ScheduledWorkflow/${editingId}`, formData);
@@ -60,7 +72,8 @@ export default function Schedules() {
 
       setShowForm(false);
       setEditingId(null);
-      setFormData({ workflowId: '', cronExpression: '', isActive: true });
+      setFormData({ workflowId: '', cronExpression: '', isActive: true, parameters: '{}' });
+      setParamError(null);
       await fetchData();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to save schedule');
@@ -73,6 +86,7 @@ export default function Schedules() {
       workflowId: schedule.workflowId,
       cronExpression: schedule.cronExpression,
       isActive: schedule.isActive,
+      parameters: schedule.parameters || '{}',
     });
     setShowForm(true);
   };
@@ -131,7 +145,8 @@ export default function Schedules() {
             onClick={() => {
               setShowForm(true);
               setEditingId(null);
-              setFormData({ workflowId: '', cronExpression: '', isActive: true });
+              setFormData({ workflowId: '', cronExpression: '', isActive: true, parameters: '{}' });
+              setParamError(null);
             }}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
           >
@@ -202,6 +217,45 @@ export default function Schedules() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Input Parameters (JSON)
+                </label>
+                <textarea
+                  value={formData.parameters}
+                  onChange={(e) => {
+                    setFormData({ ...formData, parameters: e.target.value });
+                    setParamError(null);
+                  }}
+                  rows={6}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                  placeholder='{"key": "value"}'
+                />
+                <div className="mt-2 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        const parsed = JSON.parse(formData.parameters);
+                        setFormData({ ...formData, parameters: JSON.stringify(parsed, null, 2) });
+                        setParamError(null);
+                      } catch (err) {
+                        setParamError('Cannot format invalid JSON');
+                      }
+                    }}
+                    className="text-xs text-indigo-600 hover:text-indigo-700"
+                  >
+                    Format JSON
+                  </button>
+                  {paramError && (
+                    <span className="text-xs text-red-600">{paramError}</span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Default input parameters for scheduled executions
+                </p>
+              </div>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -228,6 +282,7 @@ export default function Schedules() {
                 onClick={() => {
                   setShowForm(false);
                   setEditingId(null);
+                  setParamError(null);
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
