@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Workflows from './pages/Workflows';
 import WorkflowDesigner from './pages/WorkflowDesigner';
+import WorkflowDetail from './pages/WorkflowDetail';
 import Executions from './pages/Executions';
 import ExecutionDetail from './pages/ExecutionDetail';
 import Schedules from './pages/Schedules';
@@ -31,7 +32,8 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="workflows" element={<Workflows />} />
           <Route path="workflows/new" element={<WorkflowDesigner />} />
-          <Route path="workflows/:id" element={<WorkflowDesigner />} />
+          <Route path="workflows/:id/edit" element={<WorkflowDesigner />} />
+          <Route path="workflows/:id/detail" element={<WorkflowDetail />} />
           <Route path="executions" element={<Executions />} />
           <Route path="executions/:id" element={<ExecutionDetail />} />
           <Route path="schedules" element={<Schedules />} />

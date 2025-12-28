@@ -13,6 +13,8 @@ export default function Workflows() {
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -126,6 +128,97 @@ export default function Workflows() {
     });
   }, [workflows, searchQuery, statusFilter]);
 
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredWorkflows.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredWorkflows.map(w => w.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} workflow(s)?`)) return;
+
+    setBulkActionLoading(true);
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map(id => api.delete(`/Workflow/${id}`))
+      );
+      await fetchWorkflows();
+      setSelectedIds(new Set());
+      toast.success(`${selectedIds.size} workflow(s) deleted successfully`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete workflows');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkActivate = async () => {
+    if (selectedIds.size === 0) return;
+
+    setBulkActionLoading(true);
+    try {
+      const updatePromises = Array.from(selectedIds).map(async (id) => {
+        const workflow = workflows.find(w => w.id === id);
+        if (workflow) {
+          return api.put(`/Workflow/${id}`, {
+            name: workflow.name,
+            description: workflow.description,
+            isActive: true
+          });
+        }
+      });
+      await Promise.all(updatePromises);
+      await fetchWorkflows();
+      setSelectedIds(new Set());
+      toast.success(`${selectedIds.size} workflow(s) activated successfully`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to activate workflows');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDeactivate = async () => {
+    if (selectedIds.size === 0) return;
+
+    setBulkActionLoading(true);
+    try {
+      const updatePromises = Array.from(selectedIds).map(async (id) => {
+        const workflow = workflows.find(w => w.id === id);
+        if (workflow) {
+          return api.put(`/Workflow/${id}`, {
+            name: workflow.name,
+            description: workflow.description,
+            isActive: false
+          });
+        }
+      });
+      await Promise.all(updatePromises);
+      await fetchWorkflows();
+      setSelectedIds(new Set());
+      toast.success(`${selectedIds.size} workflow(s) deactivated successfully`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to deactivate workflows');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -161,54 +254,96 @@ export default function Workflows() {
       )}
 
       {workflows.length > 0 && (
-        <div className="mb-6 bg-white p-4 rounded-lg shadow">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search workflows..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
+        <>
+          <div className="mb-4 bg-white p-4 rounded-lg shadow">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search workflows..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    statusFilter === 'all'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setStatusFilter('active')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    statusFilter === 'active'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Active
+                </button>
+                <button
+                  onClick={() => setStatusFilter('inactive')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    statusFilter === 'inactive'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Inactive
+                </button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  statusFilter === 'all'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setStatusFilter('active')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  statusFilter === 'active'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Active
-              </button>
-              <button
-                onClick={() => setStatusFilter('inactive')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  statusFilter === 'inactive'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Inactive
-              </button>
-            </div>
           </div>
-        </div>
+
+          {selectedIds.size > 0 && (
+            <div className="mb-4 bg-indigo-50 border border-indigo-200 p-4 rounded-lg shadow">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-indigo-900">
+                  {selectedIds.size} workflow(s) selected
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleBulkActivate}
+                    disabled={bulkActionLoading}
+                    className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:opacity-50"
+                  >
+                    Activate
+                  </button>
+                  <button
+                    onClick={handleBulkDeactivate}
+                    disabled={bulkActionLoading}
+                    className="px-3 py-1 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 disabled:opacity-50"
+                  >
+                    Deactivate
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={bulkActionLoading}
+                    className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setSelectedIds(new Set())}
+                    disabled={bulkActionLoading}
+                    className="px-3 py-1 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {workflows.length === 0 ? (
@@ -238,37 +373,60 @@ export default function Workflows() {
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedIds.size === filteredWorkflows.length && filteredWorkflows.length > 0}
+                onChange={handleSelectAll}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-700 font-medium">Select All</span>
+            </label>
+          </div>
           <ul className="divide-y divide-gray-200">
             {filteredWorkflows.map((workflow) => (
               <li key={workflow.id}>
                 <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-indigo-600 truncate">
-                          {workflow.name}
-                        </p>
-                        <div className="ml-2 flex-shrink-0 flex">
-                          <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              workflow.isActive
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
+                    <div className="flex items-center gap-4 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(workflow.id)}
+                        onChange={() => handleToggleSelect(workflow.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <Link
+                            to={`/dashboard/workflows/${workflow.id}/detail`}
+                            className="text-sm font-medium text-indigo-600 truncate hover:text-indigo-800"
                           >
-                            {workflow.isActive ? 'Active' : 'Inactive'}
+                            {workflow.name}
+                          </Link>
+                          <div className="ml-2 flex-shrink-0 flex">
+                            <span
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                workflow.isActive
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {workflow.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600">
+                            {workflow.description || 'No description'}
+                          </p>
+                        </div>
+                        <div className="mt-2 flex items-center text-sm text-gray-500">
+                          <span>
+                            Created: {new Date(workflow.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                      </div>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600">
-                          {workflow.description || 'No description'}
-                        </p>
-                      </div>
-                      <div className="mt-2 flex items-center text-sm text-gray-500">
-                        <span>
-                          Created: {new Date(workflow.createdAt).toLocaleDateString()}
-                        </span>
                       </div>
                     </div>
                     <div className="ml-4 flex space-x-2">
@@ -288,7 +446,7 @@ export default function Workflows() {
                         <FiCopy />
                       </button>
                       <Link
-                        to={`/dashboard/workflows/${workflow.id}`}
+                        to={`/dashboard/workflows/${workflow.id}/edit`}
                         className="inline-flex items-center p-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                         title="Edit"
                       >
