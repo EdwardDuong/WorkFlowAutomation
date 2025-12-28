@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 import type { WorkflowExecution, Workflow } from '../types';
-import { FiClock, FiCheckCircle, FiXCircle, FiAlertCircle, FiRefreshCw, FiEye } from 'react-icons/fi';
+import { FiClock, FiCheckCircle, FiXCircle, FiAlertCircle, FiRefreshCw, FiEye, FiRotateCw } from 'react-icons/fi';
 
 export default function Executions() {
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
@@ -11,6 +12,7 @@ export default function Executions() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [workflowFilter, setWorkflowFilter] = useState<string>('all');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -72,6 +74,36 @@ export default function Executions() {
       return `${minutes}m ${seconds % 60}s`;
     } else {
       return `${seconds}s`;
+    }
+  };
+
+  const handleRetry = async (execution: WorkflowExecution, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation to detail page
+    e.stopPropagation();
+
+    try {
+      // Try to extract input data from execution context
+      let inputData = '{}';
+      try {
+        const context = JSON.parse(execution.executionContextJson || '{}');
+        if (context.inputData) {
+          inputData = typeof context.inputData === 'string' ? context.inputData : JSON.stringify(context.inputData);
+        }
+      } catch {
+        // If parsing fails, use empty object
+        inputData = '{}';
+      }
+
+      const response = await api.post('/Execution/start', {
+        workflowId: execution.workflowId,
+        inputData
+      });
+
+      const executionId = response.data.id;
+      toast.success('Workflow execution retried successfully');
+      navigate(`/dashboard/executions/${executionId}`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to retry workflow execution');
     }
   };
 
@@ -221,7 +253,16 @@ export default function Executions() {
                         </div>
                       )}
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 flex items-center space-x-3">
+                      {execution.status === 3 && ( // Failed status
+                        <button
+                          onClick={(e) => handleRetry(execution, e)}
+                          className="inline-flex items-center p-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50"
+                          title="Retry Execution"
+                        >
+                          <FiRotateCw />
+                        </button>
+                      )}
                       <FiEye className="text-gray-400" size={20} />
                     </div>
                   </div>

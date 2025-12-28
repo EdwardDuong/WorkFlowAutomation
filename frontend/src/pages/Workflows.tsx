@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
-import type { Workflow } from '../types';
-import { FiPlus, FiEdit, FiTrash2, FiPlay } from 'react-icons/fi';
+import type { Workflow, WorkflowDetail, CreateWorkflowRequest, WorkflowNodeRequest, WorkflowEdgeRequest } from '../types';
+import { FiPlus, FiEdit, FiTrash2, FiPlay, FiCopy, FiSearch } from 'react-icons/fi';
 import WorkflowInputDialog from '../components/WorkflowInputDialog';
 
 export default function Workflows() {
@@ -11,6 +11,8 @@ export default function Workflows() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,6 +65,67 @@ export default function Workflows() {
     }
   };
 
+  const handleClone = async (id: string) => {
+    try {
+      // Fetch the full workflow with nodes and edges
+      const response = await api.get<WorkflowDetail>(`/Workflow/${id}/with-nodes`);
+      const originalWorkflow = response.data;
+
+      // Create a new workflow with copied data
+      const clonedWorkflow: CreateWorkflowRequest = {
+        name: `Copy of ${originalWorkflow.name}`,
+        description: originalWorkflow.description || '',
+        isActive: false, // Set to inactive by default
+        nodes: originalWorkflow.nodes?.map((node): WorkflowNodeRequest => ({
+          nodeId: node.nodeId,
+          nodeType: node.nodeType,
+          label: node.label || '',
+          positionX: node.positionX || 0,
+          positionY: node.positionY || 0,
+          configurationJson: node.configurationJson || '{}',
+        })) || [],
+        edges: originalWorkflow.edges?.map((edge): WorkflowEdgeRequest => ({
+          edgeId: edge.edgeId,
+          sourceNodeId: edge.sourceNodeId,
+          targetNodeId: edge.targetNodeId,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+          edgeType: edge.edgeType,
+        })) || [],
+      };
+
+      // Create the new workflow
+      const createResponse = await api.post<Workflow>('/Workflow', clonedWorkflow);
+
+      // Refresh the workflows list
+      await fetchWorkflows();
+
+      toast.success('Workflow cloned successfully');
+
+      // Navigate to edit the cloned workflow
+      navigate(`/dashboard/workflows/${createResponse.data.id}`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to clone workflow');
+    }
+  };
+
+  const filteredWorkflows = useMemo(() => {
+    return workflows.filter((workflow) => {
+      // Filter by search query
+      const matchesSearch =
+        workflow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (workflow.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Filter by status
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && workflow.isActive) ||
+        (statusFilter === 'inactive' && !workflow.isActive);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [workflows, searchQuery, statusFilter]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -97,6 +160,57 @@ export default function Workflows() {
         </div>
       )}
 
+      {workflows.length > 0 && (
+        <div className="mb-6 bg-white p-4 rounded-lg shadow">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search workflows..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  statusFilter === 'all'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setStatusFilter('active')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  statusFilter === 'active'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => setStatusFilter('inactive')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  statusFilter === 'inactive'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Inactive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {workflows.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <FiPlus className="mx-auto h-12 w-12 text-gray-400" />
@@ -114,10 +228,18 @@ export default function Workflows() {
             </Link>
           </div>
         </div>
+      ) : filteredWorkflows.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <FiSearch className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No workflows found</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Try adjusting your search or filter criteria.
+          </p>
+        </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
-            {workflows.map((workflow) => (
+            {filteredWorkflows.map((workflow) => (
               <li key={workflow.id}>
                 <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
@@ -157,6 +279,13 @@ export default function Workflows() {
                         title="Run Workflow"
                       >
                         <FiPlay />
+                      </button>
+                      <button
+                        onClick={() => handleClone(workflow.id)}
+                        className="inline-flex items-center p-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-white hover:bg-blue-50"
+                        title="Clone Workflow"
+                      >
+                        <FiCopy />
                       </button>
                       <Link
                         to={`/dashboard/workflows/${workflow.id}`}
