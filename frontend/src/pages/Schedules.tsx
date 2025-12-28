@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Workflow } from '../types';
-import { FiPlus, FiEdit, FiTrash2, FiPower, FiClock, FiPlay } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiPower, FiClock, FiPlay, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { CronExpressionParser } from 'cron-parser';
 
 interface ScheduledWorkflow {
   id: string;
@@ -55,6 +56,12 @@ export default function Schedules() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate cron expression
+    if (!cronValidation.isValid) {
+      alert('Please enter a valid cron expression');
+      return;
+    }
 
     // Validate JSON parameters
     try {
@@ -138,6 +145,23 @@ export default function Schedules() {
     { label: 'Every day at 9 AM', value: '0 9 * * *' },
     { label: 'Every Monday at 9 AM', value: '0 9 * * 1' },
   ];
+
+  const cronValidation = useMemo(() => {
+    if (!formData.cronExpression) {
+      return { isValid: false, nextRuns: [], error: null };
+    }
+
+    try {
+      const interval = CronExpressionParser.parse(formData.cronExpression);
+      const nextRuns = [];
+      for (let i = 0; i < 5; i++) {
+        nextRuns.push(interval.next().toDate());
+      }
+      return { isValid: true, nextRuns, error: null };
+    } catch (err: any) {
+      return { isValid: false, nextRuns: [], error: err.message };
+    }
+  }, [formData.cronExpression]);
 
   if (loading) {
     return (
@@ -231,6 +255,37 @@ export default function Schedules() {
                     </button>
                   ))}
                 </div>
+
+                {formData.cronExpression && (
+                  <div className="mt-3">
+                    {cronValidation.isValid ? (
+                      <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiCheckCircle className="text-green-600" />
+                          <span className="text-sm font-medium text-green-800">Valid cron expression</span>
+                        </div>
+                        <div className="text-xs text-green-700">
+                          <p className="font-medium mb-1">Next 5 runs:</p>
+                          <ul className="space-y-1">
+                            {cronValidation.nextRuns.map((date, i) => (
+                              <li key={i}>
+                                {date.toLocaleString()}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : cronValidation.error ? (
+                      <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                        <div className="flex items-center gap-2">
+                          <FiAlertCircle className="text-red-600" />
+                          <span className="text-sm font-medium text-red-800">Invalid cron expression</span>
+                        </div>
+                        <p className="text-xs text-red-700 mt-1">{cronValidation.error}</p>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
 
               <div>
