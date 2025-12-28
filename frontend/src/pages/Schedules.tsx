@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Workflow } from '../types';
-import { FiPlus, FiEdit, FiTrash2, FiPower, FiClock } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiPower, FiClock, FiPlay } from 'react-icons/fi';
 
 interface ScheduledWorkflow {
   id: string;
@@ -17,6 +18,7 @@ interface ScheduledWorkflow {
 }
 
 export default function Schedules() {
+  const navigate = useNavigate();
   const [schedules, setSchedules] = useState<ScheduledWorkflow[]>([]);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +114,20 @@ export default function Schedules() {
       await fetchData();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to toggle schedule');
+    }
+  };
+
+  const handleRunNow = async (schedule: ScheduledWorkflow) => {
+    try {
+      const response = await api.post('/Execution/start', {
+        workflowId: schedule.workflowId,
+        inputData: schedule.parameters || '{}'
+      });
+
+      const executionId = response.data.id;
+      navigate(`/dashboard/executions/${executionId}`);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to start workflow execution');
     }
   };
 
@@ -343,6 +359,13 @@ export default function Schedules() {
                     </div>
                   </div>
                   <div className="ml-4 flex space-x-2">
+                    <button
+                      onClick={() => handleRunNow(schedule)}
+                      className="inline-flex items-center p-2 border border-indigo-300 rounded-md text-sm font-medium text-indigo-700 bg-white hover:bg-indigo-50"
+                      title="Run Now"
+                    >
+                      <FiPlay />
+                    </button>
                     <button
                       onClick={() => handleToggleActive(schedule)}
                       className={`inline-flex items-center p-2 border rounded-md text-sm font-medium ${
