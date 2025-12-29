@@ -174,9 +174,31 @@ Docker Compose includes automated health checks for all services:
 - API: HTTP check on `/api/health/live` every 30s
 - Frontend: HTTP check on root path every 30s
 
-## API Documentation
+## Documentation
 
-Once the API is running, visit http://localhost:5000/swagger for interactive API documentation.
+### 📚 Complete Documentation
+
+- **[User Guide](./USER_GUIDE.md)** - Complete guide to using the platform
+- **[API Reference](./API_REFERENCE.md)** - Detailed API documentation with examples
+- **[Architecture Guide](./ARCHITECTURE.md)** - System architecture and design patterns
+- **[Getting Started](./GETTING_STARTED.md)** - Development setup guide
+- **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment instructions
+- **[Swagger UI](http://localhost:5000/swagger)** - Interactive API documentation (when running)
+
+### 🎯 Quick Links
+
+- **First Time User?** → Start with the [User Guide](./USER_GUIDE.md)
+- **API Developer?** → Check the [API Reference](./API_REFERENCE.md)
+- **Deploying to Production?** → Read the [Deployment Guide](./DEPLOYMENT.md)
+- **Understanding the Codebase?** → See [Architecture Guide](./ARCHITECTURE.md)
+
+## Test Credentials
+
+For quick testing, use these credentials:
+- **Email:** test@example.com
+- **Password:** Test123!
+
+Or create your own account at http://localhost:3000/register
 
 ## License
 
